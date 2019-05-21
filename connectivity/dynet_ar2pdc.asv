@@ -49,7 +49,7 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 
 % check input
 default('measure','sPDC');
-default('diag',0);
+default('univ',0);
 default('flow',1);          % normalization per columns higlhy recommended
 default('PSD',0);
 
@@ -134,14 +134,11 @@ end
 %  ( only for plotting purposes )
 if PSD
     KF              = dynet_parpsd(KF,srate,freqs,2);
-    [~,d,f,t]       = size(PDC);
-    dg              = repmat(eye(d),[1 1 f t]);  
     pPSD            = abs(KF.SS.^2);
-    
-    pPSD            = (pPSD-min(pPSD(:))/range(pPSD(:)))...
-                     *(range(PDC(dg==0))-min(PDC(dg==0)));
-    
-    pPSD            = (pPSD./max(pPSD(dg==1)))*max_pdc;
+    [~,d,f,t]       = size(PDC);
+    dg              = repmat(eye(d),[1 1 f t]);     
+    pPSD            = (pPSD-min(pPSD(:)))./range(pPSD(:))...
+                     *range(PDC(dg==0))+min(PDC(dg==0));
     for k = 1:d
         PDC(k,k,:,:)= pPSD(k,k,:,:);
     end

@@ -122,7 +122,7 @@ end
 % data (add nuisance segment at the beginning)
 X           = zeros(ntrials,n,numel(time)+start_at);
 ARplus      = cat(4,AR(:,:,:,1:start_at),AR);
-CT          = min(abs(gallery('randcorr',ntrials))*2,1);
+CT          = min(abs(gallery('randcorr',ntrials))*3,1);
 dgI         = Shuffle(find(eye(ntrials)==0));
 CT(dgI(1:fix(numel(dgI)*.1))) = -CT(dgI(1:fix(numel(dgI)*.1)));
 % C           = diag(max(abs(randsample(-3:0.5:3,n,'true')),.5));
@@ -151,6 +151,6 @@ dyna.scaling = scalef;
 dyna.regimes = regimes;
 dyna.summary = summary_conn;
 
-clc
-disp('Simulated dynamic functional network')
-disp(dyna.net)
+% clc
+% disp('Simulated dynamic functional network')
+% disp(dyna.net)

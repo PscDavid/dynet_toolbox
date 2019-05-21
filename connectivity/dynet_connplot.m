@@ -49,6 +49,7 @@ for rr = 1:dim(1)*dim(2)
     end
     
     if rr == dim(1)*dim(2) && univ==0
+        axis off
         hp4 = get(subtightplot(dim(1),dim(2),rr),'Position');
         colorbar('Position', [hp4(1)+hp4(3)-.05   hp4(2)+0.1 ...
                                            0.02   hp4(2)+hp4(3)*1.5])
@@ -96,7 +97,6 @@ for rr = 1:dim(1)*dim(2)
         hp4 = get(gca,'Position');
         colorbar('Position', [hp4(1)+hp4(3)+0.01  hp4(2) ...
                                             0.02  hp4(2)+hp4(3)*1.5])
-
     end
         
 %     set(gca,'FontSize',12)
