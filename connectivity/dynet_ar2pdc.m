@@ -137,7 +137,7 @@ if PSD
     pPSD            = abs(KF.SS.^2);
     [~,d,f,t]       = size(PDC);
     dg              = repmat(eye(d),[1 1 f t]);     
-    pPSD            = (pPSD-min(pPSD(:)))/range(pPSD(:))...
+    pPSD            = (pPSD-min(pPSD(:)))./range(pPSD(:))...
                      *range(PDC(dg==0))+min(PDC(dg==0));
     for k = 1:d
         PDC(k,k,:,:)= pPSD(k,k,:,:);
