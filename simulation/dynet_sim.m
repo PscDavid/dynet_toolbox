@@ -6,8 +6,8 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,fdom,nstates,ntrials)
 %--------------------------------------------------------------------------
 % INPUT:
 % n        (number of nodes)      Fs      (sampling freq)    
-% duration (trial lenght, sec)    order   (model order)    
-% sparsity (proportion)           fdom    (univariate freq, Hz)
+% duration (trial lenght, s)      order   (model order)    
+% sparsity (proportion)           fdom    (univariate dominant freq, Hz)
 % nstates  (number of states)     ntrials (number of realizations)
 %--------------------------------------------------------------------------
 % OUTPUT (dynet, structure with fields)
