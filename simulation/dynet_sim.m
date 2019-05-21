@@ -123,11 +123,11 @@ end
 X           = zeros(ntrials,n,numel(time)+start_at);
 ARplus      = cat(4,AR(:,:,:,1:start_at),AR);
 CT          = min(abs(gallery('randcorr',ntrials))*3,1);
-dgI         = Shuffle(find(eye(ntrials)==0));
+dgI         = shuffling(find(eye(ntrials)==0));
 CT(dgI(1:fix(numel(dgI)*.1))) = -CT(dgI(1:fix(numel(dgI)*.1)));
 % C           = diag(max(abs(randsample(-3:0.5:3,n,'true')),.5));
 for k_p = 1:p
-    X(:,:,k_p)  = CT*randn(ntrials,n,1);
+    X(:,:,k_p)    = CT*randn(ntrials,n,1);
 end
 for k = (p+1):numel(time)+start_at
     for l = 1:p
