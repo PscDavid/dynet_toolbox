@@ -38,12 +38,12 @@ hold on
 ShadePlotForEmpahsis(states,col,0.1);
 xlabel('time(s)/states');ylabel('activity(a.u.)')
 tl = title('Surrogate time-series');tl.FontWeight = 'normal';
-figformat(1,0,0.1);
+figformat % figformat(1,0,0.1);
 
 [psd,f]  = multi_pwelch(mean(sim.Y),sim.net.srate);
 subplot(2,2,4)
 plot(f,squeeze(mean(pow2db(psd(:,:,:)),1)),'linewidth',1.5);hold off
-figformat(0,0,0.1);
+figformat; %figformat(0,0,0.1);
 xlabel('F(Hz)');ylabel('psd(db)')
 tl = title({'Surrogate psd','(trial averaged)'});tl.FontWeight = 'normal';
 

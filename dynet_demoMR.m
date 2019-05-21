@@ -6,8 +6,9 @@ addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\statespace')
 addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\statespace\optimization')
 addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\utilities')
 addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\utilities\external')
+addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\utilities\external\cbrewer\cbrewer')
 
-
+%%
 global srate p time
 %--------------------------------------------------------------------------
 % Simulation
@@ -46,4 +47,5 @@ dynet_connplot(sa_PDC,time,freqs,[],[],[],sim.DC,1)
 figure
 auc_kf     = roc_auc(gt_PDC,kf_PDC,20,1);hold on
 auc_sa     = roc_auc(gt_PDC,sa_PDC,20,1);
+legend([' KF=' num2str(auc_kf)],'',['SALK=' num2str(auc_sa)])
 disp(['AUC results: KF = ' num2str(auc_kf) ' SALK = ' num2str(auc_sa)])

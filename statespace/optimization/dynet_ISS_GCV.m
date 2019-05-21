@@ -37,7 +37,7 @@ for j = 1:numel(yr)
     segX   = reshape(Y(:,:,xr(j,:)),[trl dim*p]);
     for k = 1:numel(lvec)
         pc_lambda  = lvec(k);
-        lambda_max = norm(segX'*segY,'inf');
+        lambda_max = 0.8*norm(segX'*segY,'inf'); % if lambda_max = norm(segX'*segY,'inf')-> solution=0
         lambda_k   = pc_lambda*lambda_max;
         % economy-size decomposition of trl-by-dim H, 
         [U,S,V]    = svd(segX,'econ');
