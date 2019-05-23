@@ -1,13 +1,5 @@
-clc; clear all; close all;
-
-addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\connectivity')
-addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\simulation')
-addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\statespace')
-addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\statespace\optimization')
-addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\utilities')
-addpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox\utilities\external')
-
-
+free
+addpath(genpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox'))
 global srate p time
 %--------------------------------------------------------------------------
 % Simulation
@@ -23,7 +15,7 @@ freqs      = (1:srate/2)'; % frequency range of interest
 gt_PDC     = dynet_ar2pdc(sim,srate,freqs,'sPDC',[],[],1);
 dynet_connplot(gt_PDC,time,freqs,[],[],[],sim.DC,1)
 % note: in the diagonal is the parametric MVAR-derived PSD, scaled to the
-%       range of the off-diagonal PDC for graphic purpose;
+%       range of the off-diagonal PDC for graphical purpose;
 %       cells framed in red are open (existing) funcitonal connections
 
 %--------------------------------------------------------------------------

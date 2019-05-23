@@ -38,7 +38,7 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,fdom,nstates,ntrials)
 default('n',5);        default('Fs',200); 
 default('duration',2); default('order',15);   
 default('sparsity',.5);default('fdom',[8 16]);
-default('nstates',2);  default('ntrials',200);
+default('nstates',3);  default('ntrials',200);
 global srate p time 
 head       = {'state','rec','send','band','mag','time','osc'};
 %--------------------------------------------------------------------------
@@ -149,6 +149,7 @@ dyna.CT      = CT;
 dyna.R       = eye(n);% C;
 dyna.scaling = scalef;
 dyna.regimes = regimes;
+dyna.frange  = (1:srate/2)';
 dyna.summary = summary_conn;
 
 % clc
