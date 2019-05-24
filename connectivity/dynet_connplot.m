@@ -39,13 +39,13 @@ for rr = 1:dim(1)*dim(2)
        IM = squeeze(ConnMatrix(i2,i1,:,:));
        imagesc(time,freq,IM);
        axis xy
-%        vline(0,'w')       
+       vline(0,'w')       
     end
     else
         IM = squeeze(ConnMatrix(i2,i1,:,:));
         imagesc(time,freq,IM);
         axis xy
-%     vline(0,'w')       
+        vline(0,'w')       
     end
     
     if rr == dim(1)*dim(2) && univ==0
@@ -61,7 +61,8 @@ for rr = 1:dim(1)*dim(2)
     end
     if i2 == 1
         xlabel(labels(i1))    
-        set(gca,'XAxisLocation','top')
+        set(gca,'XAxisLocation','top');
+        set(get(gca,'XLabel'),'Rotation',45);
     end
     if i2 == i1 && univ==0
         axis off
