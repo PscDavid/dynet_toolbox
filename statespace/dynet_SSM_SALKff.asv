@@ -36,7 +36,7 @@ function SALK = dynet_SSM_SALKff(Y,p,ff)
 %     In Reglermöte 2006.
 % [2] Bach, F., Jenatton, R., Mairal, J., & OboziRki, G. (2011). 
 %     Convex optimization with sparsity-inducing norms.
-%     Optimization for Machine Learning, 5, 19-53.                         #> this could be removed
+%     Optimization for Machine Learning, 5, 19-53.                         
 % [3] Hansen, P. C. (1987). The truncatedsvd as a method for 
 %     regularization. BIT Numerical Mathematics, 27(4), 534-553.
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
