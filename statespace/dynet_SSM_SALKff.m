@@ -6,6 +6,7 @@ function SALK = dynet_SSM_SALKff(Y,p,ff)
 % Last update: 16.05.2019
 % updated 06.05.2019 by Maria Rubega    -SVD
 % updated 09.05.2019 by David Pascucci  -SVD+norm max lambda+self-tuning c
+% updated 30.05.2019 by David Pascucci  -filtering factor 
 %--------------------------------------------------------------------------
 % INPUT:
 % -Y:      matrix
