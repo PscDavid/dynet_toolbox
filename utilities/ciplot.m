@@ -13,7 +13,7 @@ hold on;
 hl              = line(x,my);
 hl.Color        = color;
 hl.LineWidth    = 1.5;
-if dots
+if dots % beta option, for log spaced x
 jitx            = x+normrnd(x,x.*.1,1,numel(x)).*...
                     normrnd(0,.01,size(y,1),numel(x));
 szy             = 1./abs(y-my);

@@ -38,7 +38,7 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,fdom,nstates,ntrials)
 default('n',5);        default('Fs',200); 
 default('duration',2); default('order',15);   
 default('sparsity',.5);default('fdom',[8 16]);
-default('nstates',2);  default('ntrials',200);
+default('nstates',3);  default('ntrials',200);
 global srate p time 
 head       = {'state','rec','send','band','mag','time','osc'};
 %--------------------------------------------------------------------------
@@ -81,8 +81,9 @@ state_ons  = sort(randsample(start_at:min_state:(samples-min_state), ...
                                                             nstates));
 state_end  = state_ons+randsample(min_state:samples,nstates);
 state_dur  = min(state_end,diff([state_ons samples]));
-% determine states and check stability
+% determine states
 regimes{nstates} = [];
+% starting (no scaling)
 scalef           = 1;
 summary_conn     = table();
 for k = 1:nstates
@@ -94,7 +95,7 @@ for k = 1:nstates
         tmpAR      = AR(:,:,:,regimes{k}(1));
         for ij = 1:numel(cON)
             freq   = sort(randsample(5:fix(Fs/2)-5,2));
-            ampli  = randsample(ascale,1)*scalef;            
+            ampli  = randsample(ascale,1)^scalef;           
             osc    = damposc(freq(1):freq(2),lag_t+(dt/2),0.05,...
                                                           ampli,(p*dt)*.5); 
             [i,j]  = ind2sub([n n],cON(ij));
@@ -105,7 +106,7 @@ for k = 1:nstates
         end
         blockA     = [tmpAR(:,:); eye((p-1)*n) zeros((p-1)*n,n)];
         if any(abs(eig(blockA))>.95)
-            scalef = scalef*.95;
+            scalef = scalef+(scalef*0.01);
         else
             ok     = 1;
         end
@@ -129,13 +130,17 @@ CT(dgI(1:fix(numel(dgI)*.1))) = -CT(dgI(1:fix(numel(dgI)*.1)));
 for k_p = 1:p
     X(:,:,k_p)    = CT*randn(ntrials,n,1);
 end
+E           = X;
 for k = (p+1):numel(time)+start_at
-    for l = 1:p
-        X(:,:,k)  =  X(:,:,k) + (ARplus(:,:,l,k)*X(:,:,k-l)')' + ...
-                                    CT*randn(ntrials,n,1);% * C;           % how about the covariance?
+    innovation    = CT*randn(ntrials,n,1);
+    E(:,:,k)      = innovation;
+    X(:,:,k)      = X(:,:,k)+innovation;
+    for l = 1:p        
+        X(:,:,k)  = X(:,:,k) + (ARplus(:,:,l,k)*X(:,:,k-l)')';
     end
 end
 X(:,:,1:start_at) = []; % remove nuisance data
+E(:,:,1:start_at) = [];
 AR                = AR(:,:,:,1:samples); % ensure size
 %==========================================================================
 dyna.net     = struct('n',n,'srate',Fs,'p',p,'time',time,   ...            % store freq of interaction?
@@ -145,10 +150,12 @@ dyna.SC      = SC;
 dyna.DC      = DC;
 dyna.AR      = AR;
 dyna.Y       = X;
+dyna.E       = E;
 dyna.CT      = CT;
 dyna.R       = eye(n);% C;
 dyna.scaling = scalef;
 dyna.regimes = regimes;
+dyna.frange  = (1:srate/2)';
 dyna.summary = summary_conn;
 
 % clc

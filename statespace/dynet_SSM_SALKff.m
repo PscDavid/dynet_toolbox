@@ -1,4 +1,4 @@
-function SALK = dynet_SSM_SALK(Y,p,lambda)
+function SALK = dynet_SSM_SALKff(Y,p,ff)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % The Sparse Adaptive Least-squares Kalman filter with self-tuning memory
 %                                       D. Pascucci, University of Fribourg
@@ -13,8 +13,8 @@ function SALK = dynet_SSM_SALK(Y,p,lambda)
 %           Sample data
 % -p:      scalar positive
 %           p-order
-% -lambda: scalar positive,        if lambda 0 -> no regularization
-%           Regularization parameter, default 0.001
+% -ff:     percentage of variance explained for setting the filter factor
+%           Regularization parameter, default 0.98
 %--------------------------------------------------------------------------
 % OUTPUT:   SALK, structure with fields:
 % -AR:     matrix
@@ -40,7 +40,7 @@ function SALK = dynet_SSM_SALK(Y,p,lambda)
 
 % -check input
 if numel(size(Y))<3;error('Check the dimensions of Y');end
-if nargin<3;lambda   = 0.01;end
+if nargin<3;ff   = 0.98;end
 
 % -Preallocating main variable
 [trl,dim,tm] = size(Y);
@@ -70,15 +70,20 @@ for k = (p+1):tm
     R(:,:,k)   = tmp./max(trl-1,1);
     trEk(k,:)  = trace(tmp);
 
-    % SVD Tikhonov (Spectral decomposition)
-    % - determine lambda
-    lambda_max = norm(H'*Z,'inf'); % convex rule [2]
-    lambda_k   = lambda*lambda_max;
-%     SALK.l(k,:) = lambda_k;
+    % SVD Tikhonov (Spectral decomposition)    
     % economy-size decomposition of trl-by-dim H
     [U,S,V]    = svd(H,'econ');
     % only the first dim column of U are computed, and S is dim-by-dim
     d          = diag(S);
+    % determine filter factor threshold
+    relv       = d.^2./sum(d.^2);
+    filtfact   = find(double(cumsum(relv)<ff),1,'last');
+    if isempty(filtfact)
+        filtfact = 1;
+    end
+    lambda_k   = d(filtfact).^2;
+    SALK.FFthr(k,:) = filtfact;
+    
     %diag(1./d.*((d.^2)./(d.^2+lambda_k)));
     D          = diag(d./(d.^2+lambda_k)); 
     Hinv       = V*D*U';

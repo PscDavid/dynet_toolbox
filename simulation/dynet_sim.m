@@ -1,32 +1,24 @@
-function dyna = dynet_sim(n,Fs,duration,order,sparsity,fdom,nstates,ntrials)
+function dyna = dynet_sim(n,Fs,duration,order,sparsity,...
+                          nstates,ntrials,snr_db,lmix)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Simulation framework for tv-MVAR generated surrogate time series
 %                                       D. Pascucci, University of Fribourg
-% Last update: 18.05.2019 - D. Pascucci
+% Last update: 27.05.2019 - D. Pascucci
 %--------------------------------------------------------------------------
 % INPUT:
-% n        (number of nodes)      Fs      (sampling freq)    
-% duration (trial lenght, s)      order   (model order)    
-% sparsity (proportion)           fdom    (univariate dominant freq, Hz)
-% nstates  (number of states)     ntrials (number of realizations)
+% 1) n        (number of nodes)           2) Fs      (sampling freq)
+% 3) duration (trial lenght, s)           4) order   (model order)    
+% 5) sparsity (proportion)                6) nstates (number of states)     
+% 7) ntrials  (number of realizations)    8) snr_db  (signal-to-noise, db)    
+% 9) lmix     (linear mixing, percentage)
 %--------------------------------------------------------------------------
-% OUTPUT (dynet, structure with fields)
-% dyne.net     sub-structure with the main properties of surrogate data
-% dyna.SC      binary structural connections matrix
-% dyna.DC      binary asymmetric functional (directed) connectivity matrix
-% dyna.AR      time varying AR coefficients (n x n x order x time)
-% dyna.Y       time-series (trials x n x time)
-% dyna.CT      across-trials correlation matrix
-% dyna.NS      noise covariance matrix (Identity for the moment)
-% dyna.scaling scaling factor for off-diagonal elements (for stability)
-% dyna.regimes temporal segments defying network states
-
+% OUTPUT (dyna, structure with fields)
 %--------------------------------------------------------------------------
 % TODO:
-% connectivity summary in a table
 % add linear mixing?
 % add snr?
 % noise covariance?
+
 % FURTHER IMPROVEMENTS:
 % 3D lattice of realistic distances for SC
 % small-world properties
@@ -35,23 +27,21 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,fdom,nstates,ntrials)
 
 %--------------------------------------------------------------------------
 % defaults                                                                 
-default('n',5);        default('Fs',200); 
-default('duration',2); default('order',15);   
-default('sparsity',.5);default('fdom',[8 16]);
-default('nstates',3);  default('ntrials',200);
-global srate p time 
-head       = {'state','rec','send','band','mag','time','osc'};
+default('n',5);         default('Fs',200); 
+default('duration',2);  default('order',fix(0.025/(1/Fs)));   
+default('sparsity',.5); default('nstates',3);  
+default('ntrials',200); default('snr_db',NaN);
+default('lmix',0);
+head       = {'state','rec','send','mag','time','osc','lagop'};
 %--------------------------------------------------------------------------
 % constants
 SClinks    = 0.8;           % Markov et al., 2012
-ascale     = 0.05:0.01:0.3; % 0.2 max better
-srate      = Fs;
+ascale     = 0.1:0.01:0.5;  % max from real data (face dataset)
 dt         = 1/Fs;
 time       = 0:dt:(duration-dt);
 samples    = numel(time);
 p          = order;
-lag_t      = dt:dt:(p*dt);
-min_state  = unique(dsearchn(time',duration*.2)); % in frames
+min_state  = unique(dsearchn(time',.15)); % minimum duration in frames
 %--------------------------------------------------------------------------
 % structural links (binary mask)
 I          = eye(n);
@@ -66,44 +56,46 @@ DC(randsample(find(MK),fix((1-sparsity)*numel(find(MK))),'false')) = 1;
 DC         = DC + I;
 %--------------------------------------------------------------------------
 % ar process (univariate)
-AR         = zeros(n,n,p,samples);
-ampli      = randsample(ascale,n,'true');
-OSC        = damposc(repmat(fdom,[n 1]),lag_t+(dt/2),0.05,ampli,(p*dt)*.5);% @Joan: fix the lag_t+(dt/2) issue
+AR         = zeros(n,n,p+2,samples);
 for i = 1:n
-    AR(i,i,:,:) = repmat(OSC(i,:)',[1 1 numel(time)]);
+    c1            = randsample(ascale,1);
+    c2            = (max(ascale)-c1)*.95;
+    AR(i,i,1:2,:) = repmat([c1 c2],[1 1 numel(time)]); % low-pass
 end
 %--------------------------------------------------------------------------
 % ar process (interactions)
 cON        = find(MK.*DC);
-start_at   = unique(dsearchn(time',...
-                    randsample(duration*.1:dt:duration*.2,1)));
-state_ons  = sort(randsample(start_at:min_state:(samples-min_state), ...
-                                                            nstates));
-state_end  = state_ons+randsample(min_state:samples,nstates);
-state_dur  = min(state_end,diff([state_ons samples]));
-% determine states and check stability
+[bf,~]     = buffer(1:numel(time),min_state);
+start_at   = sort(randsample(3:size(bf,2),nstates));
+state_ons  = bf(1,start_at);
+state_end  = [bf(1,start_at(2:end)) numel(time)];                          % no empty states in between?
+state_dur  = state_end-state_ons;
+% determine states
 regimes{nstates} = [];
+% starting (no scaling)
 scalef           = 1;
 summary_conn     = table();
 for k = 1:nstates
     regimes{k}   = state_ons(k):state_ons(k)+state_dur(k);
     ok           = 0;
-    summary      = NaN(numel(cON),8+p);
+    summary      = NaN(numel(cON),9);
     while ok==0
         % generate off-diag AR and check stability
         tmpAR      = AR(:,:,:,regimes{k}(1));
         for ij = 1:numel(cON)
-            freq   = sort(randsample(5:fix(Fs/2)-5,2));
-            ampli  = randsample(ascale,1)*scalef;            
-            osc    = damposc(freq(1):freq(2),lag_t+(dt/2),0.05,...
-                                                          ampli,(p*dt)*.5); 
+            ij_p   = randsample(1:p,1);
+            ampl1  = randsample(ascale*.5,1);                              % scaling off diag?
+            ampl2  = (max(ascale*.5)-ampl1)*0.95;
+            osc    = sign(randn(1,2)).*[ampl1 ampl2].*scalef;
             [i,j]  = ind2sub([n n],cON(ij));
-            summary(ij,:) = [k i j freq ampli ...
+            summary(ij,:) = [k i j ampl1 ...
                        time(regimes{k}(1)) time(regimes{k}(end)) ...
-                                    osc'];
-            tmpAR(i,j,:)  = osc;
+                                    osc ij_p];
+            tmpAR(i,j,ij_p:ij_p+2-1)  = osc;
         end
-        blockA     = [tmpAR(:,:); eye((p-1)*n) zeros((p-1)*n,n)];
+        pp         = p+2;
+        % stability check
+        blockA     = [tmpAR(:,:); eye((pp-1)*n) zeros((pp-1)*n,n)];
         if any(abs(eig(blockA))>.95)
             scalef = scalef*.95;
         else
@@ -111,8 +103,9 @@ for k = 1:nstates
         end
     end
     tmp            = table(summary(:,1),summary(:,2),summary(:,3),...
-                           summary(:,4:5),summary(:,6),summary(:,7:8),...
-                           summary(:,9:end),'VariableNames',head);                       
+                           summary(:,4),summary(:,5:6),...
+                           summary(:,7:end-1),summary(:,end),...
+                           'VariableNames',head);                       
     summary_conn   = vertcat(summary_conn,tmp);
     % add stable matrices to the dynamical system
     AR(:,:,:,regimes{k})  = repmat(tmpAR,[1 1 1 numel(regimes{k})]);
@@ -120,38 +113,71 @@ end
 % AR          = movingmean(AR,0.2/dt,4);
 %--------------------------------------------------------------------------
 % data (add nuisance segment at the beginning)
-X           = zeros(ntrials,n,numel(time)+start_at);
-ARplus      = cat(4,AR(:,:,:,1:start_at),AR);
+nuisance    = min(state_ons(1)*2,.5/dt);
+X           = zeros(ntrials,n,numel(time)+nuisance);
+ARplus      = cat(4,AR(:,:,:,1:nuisance),AR);
+% simulate between-trials correlation (correlated generative noise)
 CT          = min(abs(gallery('randcorr',ntrials))*3,1);
 dgI         = shuffling(find(eye(ntrials)==0));
 CT(dgI(1:fix(numel(dgI)*.1))) = -CT(dgI(1:fix(numel(dgI)*.1)));
-% C           = diag(max(abs(randsample(-3:0.5:3,n,'true')),.5));
-for k_p = 1:p
+%--------------------------------------------------------------------------
+% generate time-series
+for k_p = 1:size(AR,3)                     % the actual p or popt
     X(:,:,k_p)    = CT*randn(ntrials,n,1);
 end
-for k = (p+1):numel(time)+start_at
-    for l = 1:p
-        X(:,:,k)  =  X(:,:,k) + (ARplus(:,:,l,k)*X(:,:,k-l)')' + ...
-                                    CT*randn(ntrials,n,1);% * C;           % how about the covariance?
+E           = X;
+for k = (size(AR,3)+1):numel(time)+nuisance
+    innovation    = CT*randn(ntrials,n,1); % across trials correlation
+    E(:,:,k)      = innovation;
+    X(:,:,k)      = X(:,:,k)+innovation;
+    for l = 1:size(AR,3)        
+        X(:,:,k)  = X(:,:,k) + (ARplus(:,:,l,k)*X(:,:,k-l)')';
     end
 end
-X(:,:,1:start_at) = []; % remove nuisance data
-AR                = AR(:,:,:,1:samples); % ensure size
+X(:,:,1:nuisance) = [];                    % remove nuisance data
+Y                 = X;                     % observed signal
+E(:,:,1:nuisance) = [];                    % innovation 
+AR                = AR(:,:,:,1:samples);   % ensure size, AR coeffs
+tmp               = permute(E,[2 3 1]);
+R                 = (tmp(:,:)*tmp(:,:)');  % innovation noise covariance
+%--------------------------------------------------------------------------
+% SNR
+if ~isnan(snr_db)
+    Y             = addnoise(Y,snr_db,'w');
+end
+%--------------------------------------------------------------------------
+if lmix>0
+    x             = randsample(1:1:150,n,'false')'; % 2d lattice 15x15 cm
+    y             = randsample(1:1:150,n,'false')';
+    xy            = [x y];
+    [j,i]         = meshgrid(1:n,1:n);
+    distance      = xy(i,:) - xy(j,:);
+    DM            = zeros(n);
+    DM(:)         = sqrt(sum(distance.^2,2));       % distance matrix (cm)
+    sd            = 50*lmix;                        % calibrated over 50 cm
+    LMx           = normpdf(DM,0,sd);
+    LMx           = LMx./max(LMx);
+    for tr = 1:ntrials
+        Y(tr,:,:)     = LMx*squeeze(Y(tr,:,:));
+    end
+else
+    DM            = [];
+    LMx           = [];
+end
 %==========================================================================
-dyna.net     = struct('n',n,'srate',Fs,'p',p,'time',time,   ...            % store freq of interaction?
-                      'sparsity',sparsity,'regimes',nstates,...
-                      'trials',ntrials);
-dyna.SC      = SC;
-dyna.DC      = DC;
-dyna.AR      = AR;
-dyna.Y       = X;
-dyna.CT      = CT;
-dyna.R       = eye(n);% C;
-dyna.scaling = scalef;
-dyna.regimes = regimes;
-dyna.frange  = (1:srate/2)';
-dyna.summary = summary_conn;
+% output structure
+dyna              = struct('n',n,'srate',Fs,'delay',p,             ...
+                           'popt',size(AR,3),'time',time,          ...
+                           'frange',(1:fix(Fs/2))',                ...            
+                           'sparsity',sparsity,'nstates',nstates,  ...
+                           'trials',ntrials,'SC',SC,'DC',DC,       ...
+                           'AR',AR,'Y',Y,'E',E,'CT',CT,'R',R,      ...
+                           'scaling',scalef,'regimes',{regimes},   ...
+                           'DM',DM,'LMx',LMx,                      ...
+                           'summary',summary_conn);
 
 % clc
 % disp('Simulated dynamic functional network')
 % disp(dyna.net)
+    
+
