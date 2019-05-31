@@ -1,11 +1,9 @@
-function SALK = dynet_SSM_SALK(Y,p,lambda)
+function SALK = dynet_SSM_SALKt(Y,p,pVar)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % The Sparse Adaptive Least-squares Kalman filter with self-tuning memory
 %                                       D. Pascucci, University of Fribourg
 %                                       M. Rubega,   University of Geneve
-% Last update: 16.05.2019
-% updated 06.05.2019 by Maria Rubega    -SVD
-% updated 09.05.2019 by David Pascucci  -SVD+norm max lambda+self-tuning c
+% Last update: 29.05.2019 by David Pascucci  
 %--------------------------------------------------------------------------
 % INPUT:
 % -Y:      matrix
@@ -13,22 +11,20 @@ function SALK = dynet_SSM_SALK(Y,p,lambda)
 %           Sample data
 % -p:      scalar positive
 %           p-order
-% -lambda: scalar positive,        if lambda 0 -> no regularization
-%           Regularization parameter, default 0.001
+% -pVar:   proportion of variance to retain in spectral decomposition, 
+%           determines the filter factor, default 0.90
 %--------------------------------------------------------------------------
 % OUTPUT:   SALK, structure with fields:
 % -AR:     matrix
 %           [Channels X Channels X p X Time-samples]
 %           MVAR model coefficients
-% -R:     Measurement Noise Covariance Matrix (innovation based)
+% -R:      Measurement Noise Covariance Matrix (innovation based)
 %           [Channels X Channels X Time]
 % -PY:     matrix
 %           [Trials X Channels X Time-samples]
 %           One-step PredictioR on Y
-% -PYe:    matrix
-%           [Trials X Channels X Time-samples]
-%           One-step Residuals
 % -c:      self-tuning c for each k
+% -FF:     number of selected components to explain pVar at each time point
 %==========================================================================
 % References:
 % [1] Nilsson, M. (2006). Kalman filtering with unknown noise covariances.
@@ -40,7 +36,7 @@ function SALK = dynet_SSM_SALK(Y,p,lambda)
 
 % -check input
 if numel(size(Y))<3;error('Check the dimensions of Y');end
-if nargin<3;lambda   = 0.01;end
+if nargin<3;pVar   = 0.90;end
 
 % -Preallocating main variable
 [trl,dim,tm] = size(Y);
@@ -52,6 +48,7 @@ PY           = zeros(size(Y));               % One-step predictioR
 xm           = zeros(dim*p,dim)+1e-4;        % Prior state estimates
 trEk         = zeros(tm,1);                  % Innovation monitoring
 allc         = zeros(tm,1);                  % Self-tuning c, for all k
+FF           = allc;                         % filter factor
 
 % -Loop from p(lag)+1 through time
 for k = (p+1):tm
@@ -70,18 +67,22 @@ for k = (p+1):tm
     R(:,:,k)   = tmp./max(trl-1,1);
     trEk(k,:)  = trace(tmp);
 
-    % SVD Tikhonov (Spectral decomposition)
-    % - determine lambda
-    lambda_max = norm(H'*Z,'inf'); % convex rule [2]
-    lambda_k   = lambda*lambda_max;
-%     SALK.l(k,:) = lambda_k;
+    % SVD Truncated (Spectral decomposition)
     % economy-size decomposition of trl-by-dim H
     [U,S,V]    = svd(H,'econ');
     % only the first dim column of U are computed, and S is dim-by-dim
+    % components are retained up tp pVar
     d          = diag(S);
-    %diag(1./d.*((d.^2)./(d.^2+lambda_k)));
-    D          = diag(d./(d.^2+lambda_k)); 
-    Hinv       = V*D*U';
+    relv       = d.^2./sum(d.^2);
+    filtfact   = find(double(cumsum(relv)<pVar),1,'last');
+    if isempty(filtfact)
+        r      = 1;
+    else
+        r      = filtfact;
+    end
+    FF(k,:)    = r;
+    D          = diag(ones(r,1)./d(1:r));
+    Hinv       = V(:,1:r)*D*U(:,1:r)';
     betas      = Hinv*Z;
     
     % self-tuning adaptation constant
@@ -107,4 +108,4 @@ SALK.AR       = AR;
 SALK.R        = R;
 SALK.PY       = PY;
 SALK.c        = allc; 
-
+SALK.FF       = FF;
