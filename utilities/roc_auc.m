@@ -32,10 +32,10 @@ Y          = Y(~rmv);
 
 qrange     = linspace(0.001,1,ncrit);
 sens       = zeros(numel(qrange),1); spec    = sens;
-for k = 1:numel(qrange)
-    thre     = quantile(Y,qrange(k));
-    sens(k,:)= mean((Y(X>0)>=thre));
-    spec(k,:)= mean((Y(X==0)<thre));
+thre       = quantile(Y,qrange);
+for k = 1:numel(qrange)    
+    sens(k,:)= mean((Y(find(X>0))>=thre(k)));
+    spec(k,:)= mean((Y(find(X==0))<thre(k)));
 end
 auc        = trapz(1-sens, spec);
 

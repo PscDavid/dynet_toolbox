@@ -37,13 +37,13 @@ for rr = 1:dim(1)*dim(2)
     if univ==0
     if i1~=i2
        IM = squeeze(ConnMatrix(i2,i1,:,:));
-       imagesc(time,freq,IM);
+       imagesc(time,freq,IM);colormap(cmap)
        axis xy
        vline(0,'w')       
     end
     else
         IM = squeeze(ConnMatrix(i2,i1,:,:));
-        imagesc(time,freq,IM);
+        imagesc(time,freq,IM);colormap(cmap)
         axis xy
         vline(0,'w')       
     end
@@ -106,10 +106,17 @@ for rr = 1:dim(1)*dim(2)
         ax = gca;
         ax.XColor = [0.8500 0.3250 0.0980];%[0.9290 0.6940 0.1250]; 
         ax.YColor = [0.8500 0.3250 0.0980];%[0.9290 0.6940 0.1250];
-        ax.LineWidth = 3;
-    end
+        ax.LineWidth = 2;
+        xc = get(ax,'xlabel');        xc.Color  = [0 0 0];
+        yc = get(ax,'ylabel');        yc.Color  = [0 0 0];
+    else
+        ax = gca;
+        ax.XColor = [0 0 0];%[0.8500 0.3250 0.0980];%[0.9290 0.6940 0.1250]; 
+        ax.YColor = [0 0 0];%[0.8500 0.3250 0.0980];%[0.9290 0.6940 0.1250];
+        ax.LineWidth = 2;
+    end        
         
-    colormap(cmap)
+%     colormap(cmap)
     caxis([minscale maxscale])
 end
 % axis off

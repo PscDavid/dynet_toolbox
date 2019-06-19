@@ -2,7 +2,8 @@ function review(sim)
 
 figure('units','normalized','position',[0.25 0.1 .5 .8]); 
 subplot(2,2,1)
-imagesc(sim.SC);hold on
+imagesc(sim.SC);
+colormap(gca,[0 0 0; [0.8500 0.3250 0.0980]]);
 % plot(1:sim.net.n,1:sim.net.n,'k-');
 set(gca,'xtick',linspace(1,sim.n,sim.n)-.5,'xticklabel',[],...
     'xgrid','on','xcolor','w',...
@@ -13,7 +14,8 @@ xlabel('nodes');ylabel('nodes');
 figformat;
 tl = title('Structural links');tl.FontWeight = 'normal';
 subplot(2,2,2)
-imagesc(sim.DC);hold on
+imagesc(sim.DC);
+colormap(gca,[0 0 0; [0.8500 0.3250 0.0980]]);
 % plot(1:sim.net.n,1:sim.net.n,'k-');
 set(gca,'xtick',linspace(1,sim.n,sim.n)-.5,'xticklabel',[],...
     'xgrid','on','xcolor','w',...

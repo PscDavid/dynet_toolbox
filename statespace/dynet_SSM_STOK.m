@@ -1,4 +1,4 @@
-function SALK = dynet_SSM_SALKff(Y,p,ff)
+function SALK = dynet_SSM_STOK(Y,p,ff)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % The Sparse Adaptive Least-squares Kalman filter with self-tuning memory
 %                                       D. Pascucci, University of Fribourg
@@ -21,7 +21,7 @@ function SALK = dynet_SSM_SALKff(Y,p,ff)
 % -AR:     matrix
 %           [Channels X Channels X p X Time-samples]
 %           MVAR model coefficients
-% -R:     Measurement Noise Covariance Matrix (innovation based)
+% -R:      Measurement Noise Covariance Matrix (innovation based)
 %           [Channels X Channels X Time]
 % -PY:     matrix
 %           [Trials X Channels X Time-samples]

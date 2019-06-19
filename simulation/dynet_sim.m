@@ -56,7 +56,7 @@ DC(randsample(find(MK),fix((1-sparsity)*numel(find(MK))),'false')) = 1;
 DC         = DC + I;
 %--------------------------------------------------------------------------
 % ar process (univariate)
-AR         = zeros(n,n,p+2,samples);
+AR         = zeros(n,n,p+1,samples);
 for i = 1:n
     c1            = randsample(ascale,1);
     c2            = (max(ascale)-c1)*.95;
@@ -91,9 +91,9 @@ for k = 1:nstates
             summary(ij,:) = [k i j ampl1 ...
                        time(regimes{k}(1)) time(regimes{k}(end)) ...
                                     osc ij_p];
-            tmpAR(i,j,ij_p:ij_p+2-1)  = osc;
+            tmpAR(i,j,ij_p:ij_p+1)  = osc;
         end
-        pp         = p+2;
+        pp         = p+1;
         % stability check
         blockA     = [tmpAR(:,:); eye((pp-1)*n) zeros((pp-1)*n,n)];
         if any(abs(eig(blockA))>.95)
@@ -117,9 +117,13 @@ nuisance    = min(state_ons(1)*2,.5/dt);
 X           = zeros(ntrials,n,numel(time)+nuisance);
 ARplus      = cat(4,AR(:,:,:,1:nuisance),AR);
 % simulate between-trials correlation (correlated generative noise)
-CT          = min(abs(gallery('randcorr',ntrials))*3,1);
-dgI         = shuffling(find(eye(ntrials)==0));
-CT(dgI(1:fix(numel(dgI)*.1))) = -CT(dgI(1:fix(numel(dgI)*.1)));
+CT          = triu(reshape(normrnd(0.1,0.1,ntrials^2,1),[ntrials ntrials]));
+CT          = CT+CT' - diag(diag(CT+CT')) + eye(ntrials);
+% CT          = min(CT,1);
+% CT=eye(ntrials);
+% CT          = min(abs(gallery('randcorr',ntrials))*3,1); %3
+% dgI         = shuffling(find(eye(ntrials)==0));
+% CT(dgI(1:fix(numel(dgI)*.1))) = -CT(dgI(1:fix(numel(dgI)*.1)));
 %--------------------------------------------------------------------------
 % generate time-series
 for k_p = 1:size(AR,3)                     % the actual p or popt
