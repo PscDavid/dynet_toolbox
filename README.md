@@ -1,13 +1,32 @@
 # dynet_toolbox
-Sparse Adaptive Least-squares Kalman Filtering +simulation +connectivity metrics
 
-The complete collection of functions and scripts for estimating 
+The complete collection of functions and scripts for estimating and simulating
 time-varying Multivariate Autoregressive processes (tv-MVAR)
 by means of Kalman filtering and Sparse Adaptive Least-squares filtering.
-The toolbox includes:
-- The two main algorithms for state-space modeling of physiological time-series
-- The simulation framework
-- A set of connectivity metrics based on Partial Directed Coherence
 
-Please refer to the file dynet_demo01 for a brief exhaustive tutorial.
-A complete tutorial coming soon...
+
+The toolbox includes:
+- One demo (please refer to the file dynet_demo01.m for a brief tutorial)
+- Four folders:
+    - 'statespace'
+        - dynet_SSM_KF.m implements the Kalman filter for state-space modeling of
+        physiological time series
+        - dynet_SSM_STOK.m implements the Sparse Adaptive Least-squares Kalman
+        filter with self-tuning memory
+
+    - 'connectivity'
+        - dynet_ar2pdc.m estimates the tv PDC from tv-AR coefficients
+        - dynet_connplot.m displays connectivity matrices (function of time and
+          frequency) for each combination of signals
+        - dynet_parpsd.m estimates the AR coefficients in the frequency domain
+        and the parametric power spectral density of the input signals
+
+    - 'simulation'
+        - dynet_sim.m is the simulation framework for tv-MVAR generated
+        surrogate time series
+        - review.m displays the 1) structural adjacency matrix, 2) the
+        functional adjacency matrix, 3)surrogate time-series in the time domain,
+        4) the power spectral density of surrogate time-series
+
+    - 'utilities' contains all the invoked functions to let all the above listed
+    functions/scripts to properly work

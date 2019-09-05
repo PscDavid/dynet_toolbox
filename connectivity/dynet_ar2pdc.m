@@ -1,30 +1,33 @@
 function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% Obtain PDC, sPDC, Info-PDC from tvAR coeffients
+% Obtain PDC, sPDC, info-PDC from tvAR coeffients
 %                                          M.Rubega, D.Pascucci, 17.10.2018
-% Last update: 16.05.2019 - D. Pascucci
+% Last update: 22.08.2019
 %--------------------------------------------------------------------------
-% INPUT
-% -KF:        Output from dynet_SSM_KF or dynet_SSM_SALK
-%             containing the matrix of AR coefficients     
+% INPUTs
+% - KF:        Output from dynet_SSM_KF or dynet_SSM_SALK
+%             containing the matrix of AR coefficients
 %             [n x n x order x time]
 %             and the estimated measurement noise covariance matrix R
 %             [n x n x time]
-% -srate:     Sampling rate
-% -freqs:     Frequency vector (column)
-% -metric:    see OUTPUT
-% -univ:      Remove (0, defauls) or Keep (1) the diagonal elements
-% -PSD:       (1) Add the normalized parametric PSD on diagonals
+% - srate:     Sampling rate
+% - freqs:     Frequency vector (column)
+% - metric:    see OUTPUT
+% - univ:      Remove (0, default) or Keep (1) the diagonal elements
+% - PSD:       (1) Add the normalized parametric PSD on diagonals
 %             (0) none
 %--------------------------------------------------------------------------
-% OUTPUT
-% -PDC:       [Nodes X Nodes X Freq X Time]
+% OUTPUTs
+% - PDC:       [Nodes X Nodes X Freq X Time]
 %             one of
 %             'PDC'     % non-squared       Eq. (18) in [2]
 %             'sPDC'    % squared           Eq. (7) in [3]
 %             'PDCnn'   % non-normalized
 %             'iPDC'    % info-PDC          Eq. (5.25) in [4]
-%             'iPDCs'   % info-PDC squared  
+%             'iPDCs'   % info-PDC squared
+%--------------------------------------------------------------------------
+% INVOKED FUNCTIONs
+% default.m; dynet_parspsd.m 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % References:
 % [1] Milde, T., Leistritz, L., ..., & Witte, H. (2010), Neuroimage, 50(3),
@@ -49,7 +52,7 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 
 % check input
 default('measure','sPDC');
-default('univ',0);
+default('univ',0);          % MR: default('univ',1);
 default('flow',1);          % normalization per columns higlhy recommended
 default('PSD',0);
 
@@ -61,7 +64,6 @@ if isfield(KF,'R') && numel(size(KF.R))<3
 elseif ~isfield(KF,'R')
     KF.R       = repmat(eye(nodes),[1 1 time]);
 end
-    
 
 % -Transform AR (time-domain) into A(f) (frequency-domain)
 %  freqs should be a column vector
@@ -82,9 +84,9 @@ switch measure
         PDC = bsxfun(@rdivide,abs(A), sqrt(sum(abs(A).^2,flow)));
         
     case 'sPDC' % Eq. (7) in [3]
-
+        
         PDC = bsxfun(@rdivide,abs(A).^2, (sum(abs(A).^2,flow)));
-     
+        
     case 'PDCnn'
         PDC = abs(A);
         
@@ -136,11 +138,11 @@ if PSD
     KF              = dynet_parpsd(KF,srate,freqs,2);
     pPSD            = abs(KF.SS.^2);
     [~,d,f,t]       = size(PDC);
-    dg              = repmat(eye(d),[1 1 f t]);     
+    dg              = repmat(eye(d),[1 1 f t]);
     pPSD            = (pPSD-min(pPSD(:)))./range(pPSD(:))...
-                     *range(PDC(dg==0))+min(PDC(dg==0));
+        *range(PDC(dg==0))+min(PDC(dg==0));
     for k = 1:d
         PDC(k,k,:,:)= pPSD(k,k,:,:);
     end
 end
-   
+

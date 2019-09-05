@@ -1,49 +1,41 @@
-function SALK = dynet_SSM_STOK(Y,p,ff)
+function STOK = dynet_SSM_STOK(Y,p,ff)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% The Sparse Adaptive Least-squares Kalman filter with self-tuning memory
+% The Self-Tuning optimized Kalman filter
 %                                       D. Pascucci, University of Fribourg
 %                                       M. Rubega,   University of Geneve
-% Last update: 16.05.2019
-% updated 06.05.2019 by Maria Rubega    -SVD
-% updated 09.05.2019 by David Pascucci  -SVD+norm max lambda+self-tuning c
-% updated 30.05.2019 by David Pascucci  -filtering factor 
+% Last update: 23.08.2019
 %--------------------------------------------------------------------------
-% INPUT:
+% INPUTs:
 % -Y:      matrix
-%           [Trials X Channels X Time-samples]
+%           [Trials X Channels X Time]
 %           Sample data
 % -p:      scalar positive
 %           p-order
 % -ff:     percentage of variance explained for setting the filter factor
-%           Regularization parameter, default 0.98
+%           Regularization parameter, default 0.99
 %--------------------------------------------------------------------------
-% OUTPUT:   SALK, structure with fields:
+% OUTPUT:   STOK, structure with fields:
 % -AR:     matrix
-%           [Channels X Channels X p X Time-samples]
+%           [Channels X Channels X p X Time]
 %           MVAR model coefficients
 % -R:      Measurement Noise Covariance Matrix (innovation based)
 %           [Channels X Channels X Time]
 % -PY:     matrix
-%           [Trials X Channels X Time-samples]
+%           [Trials X Channels X Time]
 %           One-step PredictioR on Y
-% -PYe:    matrix
-%           [Trials X Channels X Time-samples]
-%           One-step Residuals
 % -c:      self-tuning c for each k
+% -FFthr   filtering factor threshold for each k [2]
 %==========================================================================
 % References:
 % [1] Nilsson, M. (2006). Kalman filtering with unknown noise covariances.
 %     In Reglermöte 2006.
-% [2] Bach, F., Jenatton, R., Mairal, J., & OboziRki, G. (2011). 
-%     Convex optimization with sparsity-inducing norms.
-%     Optimization for Machine Learning, 5, 19-53.                         #> this could be removed
-% [3] Hansen, P. C. (1987). The truncatedsvd as a method for 
+% [2] Hansen, P. C. (1987). The truncatedsvd as a method for 
 %     regularization. BIT Numerical Mathematics, 27(4), 534-553.
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 % -check input
 if numel(size(Y))<3;error('Check the dimensions of Y');end
-if nargin<3;ff   = 0.98;end
+if nargin<3;ff   = 0.99;end
 
 % -Preallocating main variable
 [trl,dim,tm] = size(Y);
@@ -78,25 +70,32 @@ for k = (p+1):tm
     [U,S,V]    = svd(H,'econ');
     % only the first dim column of U are computed, and S is dim-by-dim
     d          = diag(S);
-    % determine filtering factor threshold  [3]
+    if isnumeric(ff)
+    % determine filtering factor threshold [2]
     relv       = d.^2./sum(d.^2);
     filtfact   = find(double(cumsum(relv)<ff),1,'last');
     if isempty(filtfact)
         filtfact = 1;
     end
     lambda_k   = d(filtfact).^2;
-    SALK.FFthr(k,:) = filtfact;
-    
+    STOK.FFthr(k,:) = filtfact;
     %diag(1./d.*((d.^2)./(d.^2+lambda_k)));
     D          = diag(d./(d.^2+lambda_k)); 
+    else
+    D          = diag(1./d); 
+    STOK.FFthr(k,:) = NaN;
+    end
+    
     Hinv       = V*D*U';
     betas      = Hinv*Z;
-    
+        
     % self-tuning adaptation constant
     if k>(p+1)*2 % 0.05<=c<=0.95
-        c      = min(0.05+abs((mean(trEk(k:-1:k-p,:))-       ...
-                            mean(trEk(k-p-1:-1:k-p*2,:)))    ...
-                         ./(mean(trEk(k-p-1:-1:k-p*2,:)))),0.95);
+        ntrEk  = trEk(k-1:-1:(k-p*2));
+        e_k    = mean(ntrEk(1:p));
+        e_p    = mean(ntrEk(p+1:end));
+        x      = abs(e_k-e_p)./e_p;
+        c      = min(0.05 + x ,0.95); % or  x./max percentage allowed
     else
         c      = 0.05;
     end
@@ -111,8 +110,8 @@ end
 
 % -Saving output variables
 AR            = reshape(AR,[dim dim p tm]);
-SALK.AR       = AR;
-SALK.R        = R;
-SALK.PY       = PY;
-SALK.c        = allc; 
+STOK.AR       = AR;
+STOK.R        = R;
+STOK.PY       = PY;
+STOK.c        = allc; 
 

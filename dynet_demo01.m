@@ -1,38 +1,68 @@
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% Brief tutorial of dynet_toolbox
+%
+% Last update 22.08.2019
+%--------------------------------------------------------------------------
+% INVOKED FUNCTIONs
+% free.m; dynet_sim.m; review.m; dynet_ar2pdc.m; dynet_connplot.m; 
+% dynet_SSM_KF.m; dynet_SSM_STOK.m; roc_auc.m
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%%  Initializing
+
+% I1) Add the path containing the folder "dynet_toolbox" 
+
+p          = genpath(['C:\Users\David\Downloads\dynet_toolbox_MR']);
+addpath(p)
+
+% I2) Clear everything
+
 free
-addpath(genpath('E:\Git\tvConnectivity\Dynet_tool\dynet_toolbox'))
-%--------------------------------------------------------------------------
-% Simulation
-%--------------------------------------------------------------------------
-% simulate surrogate data with default network settings 
+
+%% Simulation
+
+% S1) Simulate surrogate data with default network settings 
 % (type 'help dynet_sim' for customizing) 
-sim        = dynet_sim(30,200,2,5,.5,3,400,0,0);
-% review the main properties of the simulated network
-% review(sim)
-% compute and visualize the ground truth PDC obtained directly from the 
+
+sim        = dynet_sim(10,200,2,5,.6,3,400,5,0);
+
+% S2) Review the main properties of the simulated network
+
+review(sim)
+
+% S3) Compute and visualize the ground truth PDC obtained directly from the 
 % true tvMVAR data-generating process (here squared-PDC, column norm)
+
 gt_PDC     = dynet_ar2pdc(sim,sim.srate,sim.frange','sPDC',[],[],0);
-% dynet_connplot(gt_PDC,sim.time,sim.frange',[],[],[],sim.DC,1)
+dynet_connplot(gt_PDC,sim.time,sim.frange',[],[],[],sim.DC,1)
+
 % note: in the diagonal the parametric MVAR-derived PSD, scaled to the
 %       range of off-diagonal PDC values for graphical purpose;
 %       cells framed in red are open (existing) functional connections
 
-%--------------------------------------------------------------------------
-% Adaptive filtering
-%--------------------------------------------------------------------------
-% general Linear Kalman Filter (canonical c=0.02) 
+%% Adaptive Filtering
+
+% AF1) Apply the general Linear Kalman Filter (canonical c=0.02) & compute
+% sPDC
+
 KF         = dynet_SSM_KF(sim.Y,sim.popt,0.02);
 kf_PDC     = dynet_ar2pdc(KF,sim.srate,sim.frange,'sPDC',[],[],0);
-% dynet_connplot(kf_PDC,sim.time,sim.frange,[],[],[],sim.DC,1)
-% Sparse Adaptive Least-squares Kalman
-SA         = dynet_SSM_SALKff(sim.Y,sim.popt,0.99);
-sa_PDC     = dynet_ar2pdc(SA,sim.srate,sim.frange,'sPDC',[],[],0);
-% dynet_connplot(sa_PDC,sim.time,sim.frange,[],[],[],sim.DC,1)
+dynet_connplot(kf_PDC,sim.time,sim.frange,[],[],[],sim.DC,1)
+sgtitle('gKF') % only with >MATLAB R2019a
 
-%--------------------------------------------------------------------------
-% Compare
-%--------------------------------------------------------------------------
-% compare the two algorithms with ROC analysis
-figure
-auc_kf     = roc_auc(gt_PDC,kf_PDC,20,1);hold on
-auc_sa     = roc_auc(gt_PDC,sa_PDC,20,1);
-disp(['AUC results: KF = ' num2str(auc_kf) ' SALK = ' num2str(auc_sa)])
+% AF2) Apply the STOK filter & compute sPDC
+
+SK         = dynet_SSM_STOK(sim.Y,sim.popt);
+sk_PDC     = dynet_ar2pdc(SK,sim.srate,sim.frange,'sPDC',[],[],0);
+dynet_connplot(sk_PDC,sim.time,sim.frange,[],[],[],sim.DC,1)
+sgtitle('STOK') % only with >MATLAB R2019a
+
+%% Comparison
+
+% C1) Compare the two algorithms with ROC analysis
+
+figure()
+auc_kf     = roc_auc(gt_PDC,kf_PDC,20,1);
+hold on
+auc_sk     = roc_auc(gt_PDC,sk_PDC,20,1);
+legend('gKF','','STOK')
+disp(['AUC results: KF = ' num2str(auc_kf) ' STOK = ' num2str(auc_sk)])
