@@ -9,12 +9,7 @@
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %%  Initializing
 
-% I1) Add the path containing the folder "dynet_toolbox" 
-
-p          = genpath(['C:\Users\David\Downloads\dynet_toolbox_MR']);
-addpath(p)
-
-% I2) Clear everything
+% Clear everything
 
 free
 
