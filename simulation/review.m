@@ -24,7 +24,7 @@ set(gca,'xtick',linspace(1,sim.n,sim.n)-.5,'xticklabel',[],...
     'gridLineStyle','-','linewidth',2,'gridalpha',1)
 xlabel('nodes'); ylabel('nodes');
 figformat;
-tl = title('Structural links');tl.FontWeight = 'normal';
+tl = title('Structural connections');tl.FontWeight = 'normal';
 subplot(2,2,2)
 imagesc(sim.DC);
 colormap(gca,[0 0 0; [0.8500 0.3250 0.0980]]);
@@ -36,7 +36,7 @@ set(gca,'xtick',linspace(1,sim.n,sim.n)-.5,'xticklabel',[],...
     'gridLineStyle','-','linewidth',2,'gridalpha',1)
 xlabel('nodes'); ylabel('nodes');
 figformat;
-tl = title('Functional channels');tl.FontWeight = 'normal';
+tl = title('Functional connections');tl.FontWeight = 'normal';
 
 subplot(2,2,3);
 mY       = squeeze(mean(sim.Y));
