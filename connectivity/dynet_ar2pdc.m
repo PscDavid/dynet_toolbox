@@ -14,6 +14,7 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 % - freqs:     Frequency vector (column)
 % - metric:    see OUTPUT
 % - univ:      Remove (0, default) or Keep (1) the diagonal elements
+% - flow:      normalization per columns (1) or rows (2)
 % - PSD:       (1) Add the normalized parametric PSD on diagonals
 %             (0) none
 %--------------------------------------------------------------------------
@@ -34,7 +35,7 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 %     960-969. A new Kalman filter approach for the estimation of
 %     high-dimensional time-variant multivariate AR models and its
 %     application in analysis of laser-evoked brain potentials.
-% [2] Baccalá, L. & Sameshima, K. (2001) Biol Cybern, 84 (6), 463–474
+% [2] BaccalÃ¡, L. & Sameshima, K. (2001) Biol Cybern, 84 (6), 463â€“474
 %     Partial directed coherence: a new concept in neural structure
 %     determination.
 % [3] Astolfi, L., ..., & Babiloni, F. (2006), IEEE Transactions on
@@ -53,7 +54,7 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 % check input
 default('measure','sPDC');
 default('univ',0);          % MR: default('univ',1);
-default('flow',1);          % normalization per columns higlhy recommended
+default('flow',1);          % normalization per columns 
 default('PSD',0);
 
 [nodes,~,order,time] = size(KF.AR);
