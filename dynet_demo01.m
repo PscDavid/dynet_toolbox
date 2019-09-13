@@ -27,7 +27,7 @@ review(sim)
 % S3) Compute and visualize the ground truth PDC obtained directly from the 
 % true tvMVAR data-generating process (here squared-PDC, column norm)
 
-gt_PDC     = dynet_ar2pdc(sim,sim.srate,sim.frange','sPDC',[],[],0);
+gt_PDC     = dynet_ar2pdc(sim,sim.srate,sim.frange','sPDC',[],[],1);
 dynet_connplot(gt_PDC,sim.time,sim.frange',[],[],[],sim.DC,1)
 
 % note: in the diagonal the parametric MVAR-derived PSD, scaled to the
@@ -40,14 +40,14 @@ dynet_connplot(gt_PDC,sim.time,sim.frange',[],[],[],sim.DC,1)
 % sPDC
 
 KF         = dynet_SSM_KF(sim.Y,sim.popt,0.02);
-kf_PDC     = dynet_ar2pdc(KF,sim.srate,sim.frange,'sPDC',[],[],0);
+kf_PDC     = dynet_ar2pdc(KF,sim.srate,sim.frange,'sPDC',[],[],1);
 dynet_connplot(kf_PDC,sim.time,sim.frange,[],[],[],sim.DC,1)
 sgtitle('gKF') % only with >MATLAB R2019a
 
 % AF2) Apply the STOK filter & compute sPDC
 
 SK         = dynet_SSM_STOK(sim.Y,sim.popt);
-sk_PDC     = dynet_ar2pdc(SK,sim.srate,sim.frange,'sPDC',[],[],0);
+sk_PDC     = dynet_ar2pdc(SK,sim.srate,sim.frange,'sPDC',[],[],1);
 dynet_connplot(sk_PDC,sim.time,sim.frange,[],[],[],sim.DC,1)
 sgtitle('STOK') % only with >MATLAB R2019a
 
