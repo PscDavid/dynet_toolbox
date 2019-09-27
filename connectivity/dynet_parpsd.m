@@ -8,7 +8,7 @@ function KF = dynet_parpsd(KF,srate,f_range,SSout,t_win)
 % INPUTs
 % - KF:         Output from SSM_KF, SSM_STOK
 % - srate:      Sampling rate
-% - f_range:    Frequency range for A(f) and SS computation
+% - f_range:    Frequency range for A(f) and SS computation, column vector
 %               - linear spacing if size(f_range)==2
 %               - user-specified spacing if size(f_range)>2
 % - SSout:      Compute the parametric SS matrix , only A(f) (0) or not
