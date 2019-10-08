@@ -28,8 +28,8 @@ function STOK = dynet_SSM_STOK(Y,p,ff)
 %==========================================================================
 % References:
 % [1] Nilsson, M. (2006). Kalman filtering with unknown noise covariances.
-%     In Reglermöte 2006.
-% [2] Hansen, P. C. (1987). The truncatedsvd as a method for 
+%     In ReglermÃ¶te 2006.
+% [2] Hansen, P. C. (1987). The truncated svd as a method for 
 %     regularization. BIT Numerical Mathematics, 27(4), 534-553.
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
