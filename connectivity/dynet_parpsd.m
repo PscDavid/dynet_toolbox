@@ -64,7 +64,7 @@ if SSout > 0
     for t = 1:time
         for f = 1:numel(freqs)
             A_ft        = squeeze(A(:,:,f,t));
-            SS(:,:,f,t) = A_ft\S_ft/A_ft';
+            SS(:,:,f,t) = (eye(length(A_ft))+A_ft)\S_ft/(eye(length(A_ft))+A_ft)';
         end
     end
     KF.SS        = SS;
