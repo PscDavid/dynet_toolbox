@@ -19,7 +19,7 @@ function KF = dynet_SSM_KF(Y,p,uc)
 % -AR:     matrix
 %           [Channels X Channels X p X Time]
 %           MVAR model coefficients
-% -NS:     Measurement Noise Covariance Matrix (W in [1])
+% -R:      Measurement Noise Covariance Matrix (W in [1])
 %           [Channels X Channels X Time]
 % -PY:     matrix
 %           [Trials X Channels X Time]

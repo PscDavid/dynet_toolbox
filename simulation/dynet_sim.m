@@ -3,14 +3,14 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,...
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Simulation framework for tv-MVAR generated surrogate time series
 %                                       
-% Last update: 23.08.2019
+% Last update: 22.10.2019
 %--------------------------------------------------------------------------
 % INPUTs:
 % - n:       number of nodes           - Fs:     sampling frequency
 % - duration:trial lenght in s         - order:  model order
 % - sparsity:proportion                - nstates:number of states
 % - ntrials: number of realizations    - snr_db: signal-to-noise ratio db
-% - lmix:    linear mixing in percentage
+% - lmix:    linear mixing in mm 
 %--------------------------------------------------------------------------
 % OUTPUT dyna, structure with fields:
 % - n:       number of nodes             - srate:  sampling frequency Fs
@@ -18,11 +18,12 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,...
 % - time:    time vector                 - frange: frequency vector
 % - sparsity:matrix sparsity             - nstates:number of states
 % - trials:  number of realizations      - SC:     structural adjacency matrix
-% - DC:      functional adjacency matrix - AR:     MVAR model coefficients
+% - FC:      functional adjacency matrix - AR:     MVAR model coefficients
 % - R:       Innovation covariance       - Y:      Simulated sample data
 % - E:       Innovation matrix           - CT:     Between-trials correlation
 % - scaling: Scale factor of off-diag AR - regimes:Stable matrices
 % - DM,LMx:  Distance matrix             - summary:Table of connections
+% - noise:   Additive mesurement noise
 %--------------------------------------------------------------------------
 % INVOKED FUNCTIONs
 % default.m; shuffling.m; addnoise.m
@@ -53,9 +54,9 @@ MK         = (UT+UT') - diag(diag(UT+UT'));
 SC         = MK + I;
 
 % - directed interactions (binary mask)
-DC         = zeros(size(SC));
-DC(randsample(find(MK),fix((1-sparsity)*numel(find(MK))),'false')) = 1;
-DC         = DC + I;
+FC         = zeros(size(SC));
+FC(randsample(find(MK),fix((1-sparsity)*numel(find(MK))),'false')) = 1;
+FC         = FC + I;
 
 % - AR process (univariate)
 AR         = zeros(n,n,p+1,samples);
@@ -66,7 +67,7 @@ for i = 1:n
 end
 
 % - AR process (interactions)
-cON        = find(MK.*DC);
+cON        = find(MK.*FC);
 [bf,~]     = buffer(1:numel(time),min_state);
 start_at   = sort(randsample(3:size(bf,2),nstates));
 state_ons  = bf(1,start_at);
@@ -149,7 +150,9 @@ R                 = (tmp(:,:)*tmp(:,:)');  % innovation noise covariance
 
 % - SNR
 if ~isnan(snr_db)
-    Y              = addnoise(Y,snr_db,'w');
+    [Y,noise]     = addnoise(Y,snr_db,'w');
+else
+    noise         = 0;
 end
 
 % - Linear mixing
@@ -177,10 +180,10 @@ dyna              = struct('n',n,'srate',Fs,'delay',p,             ...
     'popt',size(AR,3),'time',time,          ...
     'frange',(1:fix(Fs/2))',                ...
     'sparsity',sparsity,'nstates',nstates,  ...
-    'trials',ntrials,'SC',SC,'DC',DC,       ...
+    'trials',ntrials,'SC',SC,'FC',FC,       ...
     'AR',AR,'Y',Y,'E',E,'CT',CT,'R',R,      ...
     'scaling',scalef,'regimes',{regimes},   ...
     'DM',DM,'LMx',LMx,                      ...
-    'summary',summary_conn);
+    'summary',summary_conn,'noise',noise);
 
 end

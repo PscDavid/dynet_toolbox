@@ -2,27 +2,29 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Obtain PDC, sPDC, info-PDC from tvAR coeffients
 %                                          M.Rubega, D.Pascucci, 17.10.2018
-% Last update: 22.08.2019
+% Last update: 22.10.2019
 %--------------------------------------------------------------------------
 % INPUTs
 % - KF:        Output from dynet_SSM_KF or dynet_SSM_SALK
-%             containing the matrix of AR coefficients
-%             [n x n x order x time]
-%             and the estimated measurement noise covariance matrix R
-%             [n x n x time]
+%              containing the matrix of AR coefficients
+%              [n x n x order x time]
+%              and the estimated measurement noise covariance matrix R
+%              [n x n x time]
 % - srate:     Sampling rate
 % - freqs:     Frequency vector (column)
 % - metric:    see OUTPUT
 % - univ:      Remove (0, default) or Keep (1) the diagonal elements
+% - flow:      normalization per columns (1) or rows (2)
 % - PSD:       (1) Add the normalized parametric PSD on diagonals
-%             (0) none
+%              (0) none (only for graphical purpose)
 %--------------------------------------------------------------------------
 % OUTPUTs
 % - PDC:       [Nodes X Nodes X Freq X Time]
-%             one of
+%              one of
 %             'PDC'     % non-squared       Eq. (18) in [2]
 %             'sPDC'    % squared           Eq. (7) in [3]
 %             'PDCnn'   % non-normalized
+%             'sPDCnn'  % squared non-normalized
 %             'iPDC'    % info-PDC          Eq. (5.25) in [4]
 %             'iPDCs'   % info-PDC squared
 %--------------------------------------------------------------------------
@@ -52,8 +54,8 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 
 % check input
 default('measure','sPDC');
-default('univ',0);          % MR: default('univ',1);
-default('flow',1);          % normalization per columns higlhy recommended
+default('univ',0);          
+default('flow',1);          % normalization per columns
 default('PSD',0);
 
 [nodes,~,order,time] = size(KF.AR);
@@ -90,12 +92,15 @@ switch measure
     case 'PDCnn'
         PDC = abs(A);
         
+    case 'sPDCnn'
+        PDC = abs(A).^2;  
+        
     case 'iPDC' % Eq. (5.25) in [4] -> if R is diagonal, 'generalized PDC'
         
         % For construction, R should be costant over time:
-        R        = mean(KF.R(:,:,max(round(end/2),order):end),3);
-        SIGMA    = pinv(R);
-        w_ii     = repmat(diag(R),[1 nodes length(freqs) time]);
+        R         = mean(KF.R(:,:,max(round(end/2),order):end),3);
+        SIGMA     = pinv(R);
+        w_ii      = repmat(diag(R),[1 nodes length(freqs) time]);
         
         den_2     = zeros(1,nodes,length(freqs),time);
         for j = 1:nodes
@@ -104,15 +109,15 @@ switch measure
                 SIGMA),1),[2 1 3 4]);
             den_2(1,j,:,:) = sum(bsxfun(@times,den_1,conj(a_j)));
         end
-        den      = repmat(den_2,[nodes 1 1 1]);
-        PDC      = abs(bsxfun(@rdivide,A,sqrt( bsxfun(@times,w_ii,den) )));
+        den       = repmat(den_2,[nodes 1 1 1]);
+        PDC       = abs(bsxfun(@rdivide,A,sqrt( bsxfun(@times,w_ii,den) )));
         
     case 'iPDCs' % Eq. (5.25) in [4] -> if R is diagonal, 'generalized PDC'
         
         % For construction, R should be costant over time:
-        R        = mean(KF.R(:,:,max(round(end/2),order):end),3);
-        SIGMA    = pinv(R);
-        w_ii     = repmat(diag(R),[1 nodes length(freqs) time]);
+        R         = mean(KF.R(:,:,max(round(end/2),order):end),3);
+        SIGMA     = pinv(R);
+        w_ii      = repmat(diag(R),[1 nodes length(freqs) time]);
         
         den_2     = zeros(1,nodes,length(freqs),time);
         for j = 1:nodes
@@ -121,8 +126,8 @@ switch measure
                 SIGMA),1),[2 1 3 4]);
             den_2(1,j,:,:) = sum(bsxfun(@times,den_1,conj(a_j)));
         end
-        den      = repmat(den_2,[nodes 1 1 1]);
-        PDC      = abs(bsxfun(@rdivide,abs(A).^2,( bsxfun(@times,w_ii,den) )));
+        den       = repmat(den_2,[nodes 1 1 1]);
+        PDC       = abs(bsxfun(@rdivide,abs(A).^2,( bsxfun(@times,w_ii,den) )));
 end
 
 % -Remove or keep the autoregressive component
@@ -136,7 +141,7 @@ end
 %  ( only for plotting purposes )
 if PSD
     KF              = dynet_parpsd(KF,srate,freqs,2);
-    pPSD            = abs(KF.SS.^2);
+    pPSD            = abs(KF.SS).^2;
     [~,d,f,t]       = size(PDC);
     dg              = repmat(eye(d),[1 1 f t]);
     pPSD            = (pPSD-min(pPSD(:)))./range(pPSD(:))...
