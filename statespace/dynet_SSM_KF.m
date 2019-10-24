@@ -47,7 +47,7 @@ if numel(size(Y))<3; error('Check the dimensions of Y'); end
 if numel(uc)==1; C = uc; c = uc;
 else, C = uc(1); c = uc(2); end
 
-% -Preallocate main variable
+% -Preallocate main variables
 [trl,dim,tm] = size(Y);
 AR           = zeros(dim,dim*p,tm);          % AR matrix
 R            = zeros(dim,dim,tm);            % Estimated noise measurement
@@ -67,7 +67,7 @@ for k = (p+1):tm
     H            = reshape(data_back,trl,dim*p);                           % see eq. (6)
     Z            = Y(:,:,k);      % current observation                    % see eq. (5)
     
-    % Recursion on measurement noise covariance W
+    % Recursion on measurement noise covariance Rk
     Rn           = (Z-H*xm)'*(Z-H*xm)/max(trl-1,1);
     Rk           = Rk+c*(Rn-Rk);  % adaptation constant on the past of R   % see eq. (13)
     

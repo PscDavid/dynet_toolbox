@@ -37,7 +37,7 @@ function STOK = dynet_SSM_STOK(Y,p,ff)
 if numel(size(Y))<3;error('Check the dimensions of Y');end
 if nargin<3;ff   = 0.99;end
 
-% -Preallocating main variable
+% -Preallocating main variables
 [trl,dim,tm] = size(Y);
 AR           = zeros(dim,dim*p,tm);          % AR matrix
 R            = zeros(dim,dim,tm);            % Additive observation noise
@@ -51,7 +51,7 @@ allc         = zeros(tm,1);                  % Self-tuning c, for all k
 % -Loop from p(lag)+1 through time
 for k = (p+1):tm
     
-    % Transition matrix H and observation z at time k
+    % Transition matrix H from previous data
     data_back  = squeeze(Y(:,:,k-1:-1:k-p));
     H          = reshape(data_back,trl,dim*p);
     
