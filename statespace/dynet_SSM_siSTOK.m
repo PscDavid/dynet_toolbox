@@ -1,4 +1,4 @@
-function STOK = dynet_SSM_siSTOK(Y,p,C,ff)
+function STOK = dynet_SSM_siSTOK(Y,p,C,ff,scale_f)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Self-Tuning Optimized Kalman filter with connectivity priors,
 % Generalized Tikhonov Regularization
@@ -38,6 +38,7 @@ function STOK = dynet_SSM_siSTOK(Y,p,C,ff)
 
 % -check input
 default('ff',0.99); 
+default('scale_f',[10^-4 0.1])
 assert(numel(size(Y))==3,'Check the dimensions of Y');
 [trl,dim,tm] = size(Y);
 % -Preallocating main variable
@@ -49,7 +50,7 @@ xm           = zeros(dim*p,dim)+1e-4;        % Prior state estimates
 trEk         = zeros(tm,1);                  % Innovation monitoring
 allc         = zeros(tm,1);                  % Self-tuning c, for all k
 Cp           = repmat(C,[1 1 p]);            % Prior matrix
-Cp           = rescale(Cp(:,:)',10^-4,0.1);  % 10^-4 - 0.1
+Cp           = rescale(Cp(:,:)',scale_f(1),scale_f(2));  % 10^-4 - 0.1
 Q            = cell(1,dim);
 for j = 1:dim
     Q{j}     = pinv(diag(Cp(:,j)));
