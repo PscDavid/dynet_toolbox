@@ -2,7 +2,7 @@
 
 The complete collection of functions and scripts for estimating and simulating
 time-varying Multivariate Autoregressive processes (tv-MVAR)
-by means of Kalman filtering and Sparse Adaptive Least-squares filtering.
+by means of Kalman filtering and Self-Tuning Optimized Kalman filtering.
 
 
 The toolbox includes:
@@ -11,8 +11,8 @@ The toolbox includes:
     - 'statespace'
         - dynet_SSM_KF.m implements the Kalman filter for state-space modeling of
         physiological time series
-        - dynet_SSM_STOK.m implements the Sparse Adaptive Least-squares Kalman
-        filter with self-tuning memory
+        - dynet_SSM_STOK.m implements the Self-Tuning Optimized Kalman filter
+        - dynet_SSM_siSTOK.m STOK filter with structural priors 
 
     - 'connectivity'
         - dynet_ar2pdc.m estimates the tv PDC from tv-AR coefficients
