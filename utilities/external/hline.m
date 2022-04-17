@@ -28,6 +28,13 @@ function hhh=hline(y,in1,in2)
 % brandon_kuczenski@kensingtonlabs.com
 % 8 November 2001
 
+addcol   = 0;
+if isnumeric(in1)
+    cols = in1;
+    linetype = '-';
+    in1 = '-';
+    addcol = 1;
+end
 if length(y)>1  % vector input
     for I=1:length(y)
         switch nargin
@@ -84,7 +91,11 @@ else
     hold on
 
     x=get(gca,'xlim');
+    if addcol
+        h=plot(x,[y y],linetype,'color',cols);
+    else
     h=plot(x,[y y],linetype);
+    end        
     if ~isempty(label)
         yy=get(gca,'ylim');
         yrange=yy(2)-yy(1);

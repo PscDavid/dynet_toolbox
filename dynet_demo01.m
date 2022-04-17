@@ -11,7 +11,7 @@
 
 % I1) Add the path containing the folder "dynet_toolbox" 
 
-mypath     = ['D:\GOOGLE_DRIVE\Work\09_Code\DYN_Tool\dynet_toolbox'];
+mypath     = ['C:\Users\chare\Google Drive\Work\09_Code\DYN_Tool\dynet_toolbox'];
 p          = genpath(mypath);
 addpath(p)
 

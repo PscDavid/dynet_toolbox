@@ -1,5 +1,5 @@
 function dyna = dynet_sim(n,Fs,duration,order,sparsity,...
-                          nstates,ntrials,snr_db,lmix)
+                          nstates,ntrials,snr_db,lmix,maxdu,range)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Simulation framework for tv-MVAR generated surrogate time series
 %                                       
@@ -10,7 +10,8 @@ function dyna = dynet_sim(n,Fs,duration,order,sparsity,...
 % - duration:trial lenght in s         - order:  model order
 % - sparsity:proportion                - nstates:number of states
 % - ntrials: number of realizations    - snr_db: signal-to-noise ratio db
-% - lmix:    linear mixing in mm 
+% - lmix:    linear mixing in mm       - maxdu:  max duration AR states
+% - range:   AR range and steps
 %--------------------------------------------------------------------------
 % OUTPUT dyna, structure with fields:
 % - n:       number of nodes             - srate:  sampling frequency Fs
@@ -34,12 +35,13 @@ default('n',5);         default('Fs',200);
 default('duration',2);  default('order',fix(0.025/(1/Fs)));
 default('sparsity',.5); default('nstates',3);
 default('ntrials',200); default('snr_db',NaN);
-default('lmix',0);
+default('lmix',0);      default('maxdu',NaN);
+default('range',0.1:0.01:0.5);
 head       = {'state','rec','send','mag','time','osc','lagop'};
 
 % - constants
 SClinks    = 0.8;                         % Markov et al., 2012
-ascale     = 0.1:0.01:0.5;
+ascale     = range;
 dt         = 1/Fs;
 time       = 0:dt:(duration-dt);
 samples    = numel(time);
@@ -73,6 +75,14 @@ start_at   = sort(randsample(3:size(bf,2),nstates));
 state_ons  = bf(1,start_at);
 state_end  = [bf(1,start_at(2:end)) numel(time)];                          % no empty states in between?
 state_dur  = state_end-state_ons;
+% correction for a single state with variable maxdu
+if nstates == 1 && ~isnan(maxdu)
+    ntpoints  = unique(dsearchn(time',maxdu));
+    state_ons = randsample(fix(numel(time)/3):numel(time)-ntpoints,1);
+    state_end = state_ons+ntpoints;
+    state_dur = state_end-state_ons;
+end
+    
 % determine states
 regimes{nstates} = [];
 % starting (no scaling)

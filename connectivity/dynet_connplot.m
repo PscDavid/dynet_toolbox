@@ -121,10 +121,10 @@ for rr = 1:dim(1)*dim(2)
         hp4 = get(gca,'Position');
         colorbar('Position', [hp4(1)+hp4(3)+0.01  hp4(2) ...
             0.02  hp4(2)+hp4(3)*1.5])
+        figformat(0,0,.1,10);
     end
     
     %     set(gca,'FontSize',12)
-    figformat(0,0,.1,10);
     if nnz(SC)>0 && SC(i2,i1)==1 && i1~=i2
         ax = gca;
         ax.XColor = [0.8500 0.3250 0.0980];%[0.9290 0.6940 0.1250];

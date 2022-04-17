@@ -2,11 +2,11 @@ function figformat(h,v,scale,fsize)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Define default figure format 
 %
-% Last update: 22.08.2019
+% Last update: 31.03.2021
 %--------------------------------------------------------------------------
 % INPUTs
-% - h:     default 0 otherwise 1, draw horizontal black line in inf,0
-% - v:     default 0 otherwise 1, draw vertical black line in 0,inf
+% - h:     default 0 otherwise x, draw horizontal black line in inf,x
+% - v:     default 0 otherwise x, draw vertical black line in x,inf
 % - scale: scale
 % - fsize: font size
 %--------------------------------------------------------------------------
@@ -15,18 +15,21 @@ function figformat(h,v,scale,fsize)
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 default('h',0);
 default('v',0);
+default('scale',NaN);
 default('fsize',15);
+% set(gca,'fontsize',fsize,'fontname','Helvetica',...
+%     'linewidth',1.5,'TickDir','out')
 set(gca,'fontsize',fsize,'fontname','Helvetica',...
-    'linewidth',1.5,'TickDir','out')
+    'linewidth',1,'TickLength',[0 0])
 set(gcf,'color','w')
-if h
-    hline(0,'k--');
+if ~isnan(h)
+    hline(h,'k--');
 end
-if v
-    vline(0,'k--');
+if ~isnan(v)
+    vline(v,'k--');
 end
 % scale  = 0.1;
-if nargin==3
+if nargin==3 && ~isnan(scale)
     pos    = get(gca, 'Position');
     pos(2) = pos(2)+scale*pos(4);
     pos(4) = (1-scale)*pos(4);

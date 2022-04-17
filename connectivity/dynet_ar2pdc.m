@@ -5,7 +5,7 @@ function PDC = dynet_ar2pdc(KF,srate,freqs,measure,univ,flow,PSD)
 % Last update: 22.10.2019
 %--------------------------------------------------------------------------
 % INPUTs
-% - KF:        Output from dynet_SSM_KF or dynet_SSM_SALK
+% - KF:        Output from dynet_SSM_KF or dynet_SSM_STOK
 %              containing the matrix of AR coefficients
 %              [n x n x order x time]
 %              and the estimated measurement noise covariance matrix R
